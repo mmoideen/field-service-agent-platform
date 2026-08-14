@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: fieldservice-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-fieldservice}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fieldservice}
+      POSTGRES_DB: ${POSTGRES_DB:-fieldservice}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fieldservice"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: fieldservice-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.backend
+    container_name: fieldservice-backend
+    environment:
+      DATABASE_URL: postgresql://fieldservice:fieldservice@postgres:5432/fieldservice
+      REDIS_URL: redis://redis:6379/0
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../../backend:/app/backend
+      - ../../packages:/app/packages
+
+  frontend:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.frontend
+    container_name: fieldservice-frontend
+    environment:
+      VITE_API_URL: http://localhost:8000
+      VITE_WS_URL: ws://localhost:8000/ws
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    volumes:
+      - ../../frontend/src:/app/src
+
+volumes:
+  postgres-data:
+  redis-data:
