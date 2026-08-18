@@ -1,4 +1,5 @@
 """Service ticket API endpoints."""
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -8,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.app.agents.dispatch_optimizer import DispatchOptimizerAgent
 from backend.app.core.database import get_db
 from backend.app.models.ticket import ServiceTicket
-from packages.domain.models import Location
 from packages.schemas.api import CreateTicketRequest, UpdateTicketRequest
 
 router = APIRouter()
@@ -18,7 +18,7 @@ router = APIRouter()
 async def create_ticket(
     request: CreateTicketRequest,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """Create a new service ticket."""
     ticket = ServiceTicket(
         title=request.title,
@@ -68,7 +68,7 @@ async def create_ticket(
 async def get_ticket(
     ticket_id: UUID,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """Get a specific ticket by ID."""
     ticket = await db.get(ServiceTicket, ticket_id)
     if not ticket:
@@ -104,7 +104,7 @@ async def get_ticket(
 async def list_tickets(
     status: str | None = None,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """List all service tickets with optional status filter."""
     query = select(ServiceTicket)
     if status:
@@ -135,7 +135,7 @@ async def update_ticket(
     ticket_id: UUID,
     request: UpdateTicketRequest,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """Update a service ticket."""
     ticket = await db.get(ServiceTicket, ticket_id)
     if not ticket:

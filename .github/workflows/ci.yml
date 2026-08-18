@@ -146,15 +146,16 @@ jobs:
 
       - name: Check for TODOs in production code
         run: |
-          TODO_COUNT=$(grep -r "TODO" backend/app frontend/src || true | wc -l)
-          if [ $TODO_COUNT -gt 0 ]; then
+          TODO_COUNT=$(grep -rc "TODO" backend/app frontend/src | awk -F: '{ total += $2 } END { print total + 0 }')
+          if [ "$TODO_COUNT" -gt 0 ]; then
             echo "Warning: Found $TODO_COUNT TODOs in production code"
-            grep -r "TODO" backend/app frontend/src || true
+            grep -rn "TODO" backend/app frontend/src || true
           fi
 
       - name: Verify no hardcoded secrets
         run: |
-          if grep -r "sk-" backend/ frontend/ || grep -r "password.*=" backend/ frontend/ | grep -v ".example" | grep -v "test"; then
+          PATTERN='sk-[A-Za-z0-9]{20,}|(password|secret|token|api[_-]?key)[[:space:]]*[=:][[:space:]]*["'"'"'][^"'"'"']+["'"'"']'
+          if grep -rInE "$PATTERN" backend/app backend/tests frontend/src packages scripts infra; then
             echo "Error: Potential hardcoded secrets detected"
             exit 1
           fi

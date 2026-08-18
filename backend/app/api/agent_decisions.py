@@ -1,4 +1,5 @@
 """Agent decision API endpoints."""
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -16,7 +17,7 @@ router = APIRouter()
 async def list_decisions(
     status: str | None = None,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """List all agent decisions with optional status filter."""
     query = select(AgentDecision).order_by(AgentDecision.created_at.desc())
     if status:
@@ -47,7 +48,7 @@ async def list_decisions(
 async def get_decision(
     decision_id: UUID,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """Get a specific agent decision by ID."""
     decision = await db.get(AgentDecision, decision_id)
     if not decision:
@@ -75,7 +76,7 @@ async def override_decision(
     decision_id: UUID,
     request: OverrideDecisionRequest,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """Override an agent decision with human judgment."""
     decision = await db.get(AgentDecision, decision_id)
     if not decision:
@@ -107,7 +108,7 @@ async def approve_decision(
     decision_id: UUID,
     approved_by: str,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """Approve an agent decision."""
     decision = await db.get(AgentDecision, decision_id)
     if not decision:

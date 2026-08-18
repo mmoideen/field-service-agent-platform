@@ -1,7 +1,7 @@
 """Tests for dispatch optimizer agent."""
-import pytest
-from datetime import datetime
 from uuid import uuid4
+
+import pytest
 
 from backend.app.agents.dispatch_optimizer import DispatchOptimizerAgent
 from backend.app.models.ticket import ServiceTicket

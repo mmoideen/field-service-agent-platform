@@ -1,8 +1,9 @@
 """Agent decision database model."""
 from datetime import datetime
+from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import Float, JSON, String, Text
+from sqlalchemy import JSON, Float, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.app.core.database import Base
@@ -22,7 +23,7 @@ class AgentDecision(Base):
 
     reasoning: Mapped[str] = mapped_column(Text)
     confidence_score: Mapped[float] = mapped_column(Float)
-    recommendation: Mapped[dict] = mapped_column(JSON)
+    recommendation: Mapped[dict[str, Any]] = mapped_column(JSON)
 
     status: Mapped[str] = mapped_column(String(20), default="pending")
     human_override_reason: Mapped[str | None] = mapped_column(Text, nullable=True)

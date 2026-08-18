@@ -1,4 +1,5 @@
 """Parts inventory API endpoints."""
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -16,7 +17,7 @@ router = APIRouter()
 async def list_parts(
     low_stock_only: bool = False,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """List all parts with optional low stock filter."""
     query = select(Part)
     if low_stock_only:
@@ -47,7 +48,7 @@ async def list_parts(
 async def get_part(
     part_id: UUID,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """Get a specific part by ID."""
     part = await db.get(Part, part_id)
     if not part:
@@ -73,7 +74,7 @@ async def get_part(
 async def check_procurement(
     part_id: UUID,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """Run procurement agent to check if part needs reordering."""
     part = await db.get(Part, part_id)
     if not part:

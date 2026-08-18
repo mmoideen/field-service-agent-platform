@@ -95,7 +95,7 @@ class PartsProcurementAgent(BaseAgent):
             return {
                 "should_order": True,
                 "urgency_score": 1.0,
-                "analysis": f"Part is out of stock. Immediate reorder required.",
+                "analysis": "Part is out of stock. Immediate reorder required.",
             }
         elif current_stock < reorder_point:
             urgency = 1.0 - (current_stock / reorder_point)

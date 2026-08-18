@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { Part } from '../types';
 import { partsApi } from '../services/api';
@@ -8,18 +8,18 @@ export default function PartsPage() {
   const [parts, setParts] = useState<Part[]>([]);
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
 
-  useEffect(() => {
-    loadParts();
-  }, [showLowStockOnly]);
-
-  const loadParts = async () => {
+  const loadParts = useCallback(async () => {
     try {
       const response = await partsApi.list(showLowStockOnly) as { parts: Part[] };
       setParts(response.parts);
     } catch (error) {
       console.error('Failed to load parts:', error);
     }
-  };
+  }, [showLowStockOnly]);
+
+  useEffect(() => {
+    loadParts();
+  }, [loadParts]);
 
   const handleCheckProcurement = async (partId: string) => {
     try {

@@ -1,5 +1,4 @@
 """WebSocket endpoint for real-time dashboard updates."""
-import asyncio
 import json
 from typing import Any
 
@@ -30,7 +29,8 @@ class ConnectionManager:
         Args:
             websocket: WebSocket connection to remove.
         """
-        self.active_connections.remove(websocket)
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
 
     async def send_personal_message(self, message: str, websocket: WebSocket) -> None:
         """Send a message to a specific connection.
@@ -48,12 +48,13 @@ class ConnectionManager:
             message: Message dictionary to broadcast.
         """
         message_str = json.dumps(message)
-        for connection in self.active_connections:
+        for connection in list(self.active_connections):
             try:
                 await connection.send_text(message_str)
             except Exception:
-                # Connection may have been closed
-                pass
+                # The client went away without a clean disconnect; drop it so the
+                # connection list does not grow unboundedly.
+                self.disconnect(connection)
 
 
 manager = ConnectionManager()

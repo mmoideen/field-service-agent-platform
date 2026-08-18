@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import AgentDecisionCard from '../components/AgentDecisionCard';
 import { AgentDecision } from '../types';
@@ -8,18 +8,18 @@ export default function AgentActivityPage() {
   const [decisions, setDecisions] = useState<AgentDecision[]>([]);
   const [filter, setFilter] = useState<string>('');
 
-  useEffect(() => {
-    loadDecisions();
-  }, [filter]);
-
-  const loadDecisions = async () => {
+  const loadDecisions = useCallback(async () => {
     try {
       const response = await decisionsApi.list(filter) as { decisions: AgentDecision[] };
       setDecisions(response.decisions);
     } catch (error) {
       console.error('Failed to load decisions:', error);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    loadDecisions();
+  }, [loadDecisions]);
 
   const handleApprove = async (id: string) => {
     try {
