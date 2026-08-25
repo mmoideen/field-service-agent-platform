@@ -8,12 +8,17 @@ A production-ready agentic platform for workforce management and field service o
 
 This platform showcases domain-specific AI agent architecture applied to field service operations (elevator maintenance industry). It addresses real operational challenges while demonstrating governance, auditability, and human-in-the-loop patterns essential for production AI deployments.
 
-### Key Outcomes
+### What This Demonstrates
 
-- **40% reduction in dispatch decision time**: Automated technician assignment based on skills, proximity, and workload.
-- **92% warranty claim accuracy**: AI-powered triage reduces manual review overhead and dispute rates.
-- **Zero stock-outs on critical parts**: Predictive procurement prevents service delays.
-- **Full audit trail**: Every agent decision is logged, explainable, and reversible.
+This platform has never run in a business, so there are no operational outcomes to report. Everything below is a property of the code, verifiable by reading it or running the test suite.
+
+- **Dispatch reasoning**: Technician assignment scored on skills, proximity, and current workload, with the scoring inputs exposed in the decision record rather than hidden behind a model call.
+- **Warranty triage against explicit policy**: Claims are evaluated with encoded warranty logic, so any decision traces back to the rule that produced it.
+- **Parts procurement recommendations**: Reorder suggestions derived from consumption history and lead times.
+- **Full audit trail**: Every agent decision is persisted with its reasoning, confidence score, timestamp, and any operator override.
+- **Human in the loop on every decision**: Agents recommend, operators approve. No agent action is final without a human.
+
+An earlier version of this section claimed a 40 percent reduction in dispatch decision time, 92 percent warranty claim accuracy, and zero stock-outs on critical parts. Those numbers were never measured, and nothing in this repository produces them. They have been removed. If you see a percentage improvement quoted from this project anywhere, it is not real.
 
 ### Architectural Implications
 
