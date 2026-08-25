@@ -1,304 +1,250 @@
-"""Seed database with realistic field service demo data."""
-import asyncio
-import sys
-from datetime import datetime, timedelta
-from pathlib import Path
-from uuid import uuid4
+"""Create the database schema and seed demo field service data.
 
-# Add project root to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+Run with ``make seed``. Safe to re-run: seeding is skipped when technicians
+already exist.
+"""
+import asyncio
+from datetime import datetime, timedelta
+from typing import Any
 
 from sqlalchemy import select
 
-from backend.app.core.database import async_session_maker, engine
-from backend.app.core.database import Base
-from backend.app.models.part import Part
-from backend.app.models.technician import Technician
-from backend.app.models.ticket import ServiceTicket
-from backend.app.models.warranty import WarrantyClaim
+from backend.app.core.database import Base, async_session_maker, engine
+from backend.app.models import Part, ServiceTicket, Technician, WarrantyClaim
 
-
-async def create_tables() -> None:
-    """Create all database tables."""
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-
-async def seed_technicians() -> list[str]:
-    """Seed technicians with skills and locations."""
-    technicians_data = [
-        {
-            "name": "Sarah Chen",
-            "email": "sarah.chen@fieldservice.com",
-            "phone": "555-0101",
-            "skills": {
-                "skills": [
-                    {"name": "Elevator Repair", "category": "Mechanical", "level": "expert"},
-                    {"name": "Hydraulic Systems", "category": "Mechanical", "level": "advanced"},
-                    {"name": "Safety Compliance", "category": "Regulatory", "level": "expert"},
-                ]
-            },
-            "home_location": {
-                "latitude": 37.7749,
-                "longitude": -122.4194,
-                "address": "123 Market St, San Francisco, CA 94102",
-            },
+TECHNICIANS: list[dict[str, Any]] = [
+    {
+        "name": "Alicia Nguyen",
+        "email": "alicia.nguyen@example.com",
+        "phone": "+1-415-555-0111",
+        "skills": {
+            "skills": [
+                {"name": "Elevator Repair", "category": "Mechanical", "level": "expert"},
+                {"name": "Safety Compliance", "category": "Regulatory", "level": "advanced"},
+            ]
         },
-        {
-            "name": "Marcus Thompson",
-            "email": "marcus.t@fieldservice.com",
-            "phone": "555-0102",
-            "skills": {
-                "skills": [
-                    {"name": "Elevator Repair", "category": "Mechanical", "level": "advanced"},
-                    {"name": "Electrical Systems", "category": "Electrical", "level": "expert"},
-                    {"name": "Modernization", "category": "Installation", "level": "intermediate"},
-                ]
-            },
-            "home_location": {
-                "latitude": 37.8044,
-                "longitude": -122.2712,
-                "address": "456 Broadway, Oakland, CA 94612",
-            },
+        "home_location": {
+            "address": "1 Market St",
+            "city": "San Francisco",
+            "state": "CA",
+            "zip_code": "94105",
+            "latitude": 37.7936,
+            "longitude": -122.3965,
         },
-        {
-            "name": "Jennifer Kim",
-            "email": "j.kim@fieldservice.com",
-            "phone": "555-0103",
-            "skills": {
-                "skills": [
-                    {"name": "Preventive Maintenance", "category": "Maintenance", "level": "expert"},
-                    {"name": "Diagnostics", "category": "Technical", "level": "advanced"},
-                ]
-            },
-            "home_location": {
-                "latitude": 37.3382,
-                "longitude": -121.8863,
-                "address": "789 First St, San Jose, CA 95113",
-            },
+        "is_available": True,
+        "max_jobs_per_day": 6,
+    },
+    {
+        "name": "Marcus Boyd",
+        "email": "marcus.boyd@example.com",
+        "phone": "+1-510-555-0122",
+        "skills": {
+            "skills": [
+                {"name": "Hydraulic Systems", "category": "Mechanical", "level": "expert"},
+                {"name": "Elevator Repair", "category": "Mechanical", "level": "intermediate"},
+            ]
         },
-    ]
+        "home_location": {
+            "address": "1200 Broadway",
+            "city": "Oakland",
+            "state": "CA",
+            "zip_code": "94612",
+            "latitude": 37.8044,
+            "longitude": -122.2712,
+        },
+        "is_available": True,
+        "max_jobs_per_day": 5,
+    },
+    {
+        "name": "Priya Raman",
+        "email": "priya.raman@example.com",
+        "phone": "+1-650-555-0133",
+        "skills": {
+            "skills": [
+                {"name": "Electrical Systems", "category": "Electrical", "level": "advanced"},
+                {"name": "Controller Diagnostics", "category": "Electrical", "level": "expert"},
+            ]
+        },
+        "home_location": {
+            "address": "500 El Camino Real",
+            "city": "Santa Clara",
+            "state": "CA",
+            "zip_code": "95050",
+            "latitude": 37.3496,
+            "longitude": -121.9390,
+        },
+        "is_available": False,
+        "max_jobs_per_day": 6,
+    },
+]
 
-    technician_ids = []
-    async with async_session_maker() as session:
-        for tech_data in technicians_data:
-            tech = Technician(**tech_data, is_available=True)
-            session.add(tech)
-            technician_ids.append(str(tech.id))
+PARTS: list[dict[str, Any]] = [
+    {
+        "part_number": "ELV-HYD-100",
+        "name": "Hydraulic Pump Assembly",
+        "description": "Replacement hydraulic pump for low-rise elevator systems.",
+        "category": "Hydraulics",
+        "unit_price": 1450.00,
+        "quantity_in_stock": 12,
+        "reorder_point": 5,
+        "reorder_quantity": 10,
+        "status": "in_stock",
+        "vendor_name": "LiftParts Direct",
+        "vendor_part_number": "LP-HYD-100",
+        "lead_time_days": 7,
+    },
+    {
+        "part_number": "ELV-CTL-220",
+        "name": "Controller Board",
+        "description": "Main controller board for traction elevator cabinets.",
+        "category": "Electronics",
+        "unit_price": 890.00,
+        "quantity_in_stock": 3,
+        "reorder_point": 6,
+        "reorder_quantity": 12,
+        "status": "low_stock",
+        "vendor_name": "Vertical Systems Supply",
+        "vendor_part_number": "VSS-CTL-220",
+        "lead_time_days": 14,
+    },
+    {
+        "part_number": "ELV-DOR-045",
+        "name": "Door Operator Belt",
+        "description": "Drive belt for automatic door operators.",
+        "category": "Doors",
+        "unit_price": 75.50,
+        "quantity_in_stock": 0,
+        "reorder_point": 10,
+        "reorder_quantity": 25,
+        "status": "out_of_stock",
+        "vendor_name": "LiftParts Direct",
+        "vendor_part_number": "LP-DOR-045",
+        "lead_time_days": 3,
+    },
+]
 
-        await session.commit()
 
-    print(f"Seeded {len(technicians_data)} technicians")
-    return technician_ids
-
-
-async def seed_tickets(technician_ids: list[str]) -> list[str]:
-    """Seed service tickets with various statuses."""
-    tickets_data = [
+def _tickets(now: datetime) -> list[dict[str, Any]]:
+    """Build demo service tickets covering the main service types."""
+    return [
         {
-            "title": "Emergency elevator stuck on floor 12",
-            "description": "Passenger elevator stuck between floors 12 and 13. 3 people trapped.",
+            "title": "Elevator stuck between floors",
+            "description": "Car 2 is stuck between floors 4 and 5 with no passengers inside.",
             "service_type": "breakdown",
             "priority": "critical",
             "status": "open",
-            "customer_name": "Downtown Office Tower",
-            "customer_phone": "555-1001",
-            "customer_email": "facility@downtowntower.com",
-            "location_address": "100 Main St",
+            "customer_name": "Bayview Tower HOA",
+            "customer_phone": "+1-415-555-0180",
+            "customer_email": "facilities@bayviewtower.example.com",
+            "location_address": "300 Beale St",
             "location_city": "San Francisco",
             "location_state": "CA",
             "location_zip_code": "94105",
-            "location_latitude": 37.7897,
-            "location_longitude": -122.3972,
+            "location_latitude": 37.7887,
+            "location_longitude": -122.3899,
             "required_skills": ["Elevator Repair", "Safety Compliance"],
-            "estimated_duration_hours": 4.0,
+            "estimated_duration_hours": 3.0,
         },
         {
-            "title": "Scheduled preventive maintenance",
-            "description": "Quarterly PM for all 6 elevators in building.",
+            "title": "Quarterly preventive maintenance",
+            "description": "Scheduled inspection and lubrication for two traction units.",
             "service_type": "preventive_maintenance",
             "priority": "medium",
-            "status": "assigned",
-            "customer_name": "Tech Plaza",
-            "customer_phone": "555-1002",
-            "customer_email": "ops@techplaza.com",
-            "location_address": "500 Market St",
-            "location_city": "San Francisco",
-            "location_state": "CA",
-            "location_zip_code": "94102",
-            "location_latitude": 37.7625,
-            "location_longitude": -122.4155,
-            "required_skills": ["Preventive Maintenance"],
-            "estimated_duration_hours": 6.0,
-            "assigned_technician_id": technician_ids[0] if technician_ids else None,
-            "scheduled_start": datetime.utcnow() + timedelta(days=1),
-        },
-        {
-            "title": "Door sensor malfunction",
-            "description": "Elevator doors not closing properly, sensor may need replacement.",
-            "service_type": "breakdown",
-            "priority": "high",
             "status": "open",
-            "customer_name": "Medical Center West",
-            "customer_phone": "555-1003",
-            "customer_email": "maintenance@medwest.org",
-            "location_address": "200 Health Blvd",
+            "customer_name": "Lakeside Offices",
+            "customer_phone": "+1-510-555-0190",
+            "customer_email": "ops@lakesideoffices.example.com",
+            "location_address": "1900 Lakeshore Ave",
             "location_city": "Oakland",
             "location_state": "CA",
-            "location_zip_code": "94607",
-            "location_latitude": 37.8100,
-            "location_longitude": -122.2620,
-            "required_skills": ["Electrical Systems", "Diagnostics"],
-            "estimated_duration_hours": 2.5,
+            "location_zip_code": "94606",
+            "location_latitude": 37.8016,
+            "location_longitude": -122.2585,
+            "required_skills": ["Elevator Repair"],
+            "estimated_duration_hours": 4.0,
+            "scheduled_start": now + timedelta(days=2),
+            "scheduled_end": now + timedelta(days=2, hours=4),
+        },
+        {
+            "title": "Callback: door closes too fast",
+            "description": "Follow-up visit after door operator replacement last week.",
+            "service_type": "callback",
+            "priority": "high",
+            "status": "assigned",
+            "customer_name": "Peninsula Medical Center",
+            "customer_phone": "+1-650-555-0170",
+            "customer_email": "engineering@penmed.example.com",
+            "location_address": "820 Middlefield Rd",
+            "location_city": "Palo Alto",
+            "location_state": "CA",
+            "location_zip_code": "94301",
+            "location_latitude": 37.4419,
+            "location_longitude": -122.1430,
+            "required_skills": ["Controller Diagnostics"],
+            "estimated_duration_hours": 2.0,
         },
     ]
 
-    ticket_ids = []
-    async with async_session_maker() as session:
-        for ticket_data in tickets_data:
-            if "assigned_technician_id" in ticket_data and ticket_data["assigned_technician_id"]:
-                ticket_data["assigned_technician_id"] = uuid4()  # Convert to UUID
 
-            ticket = ServiceTicket(**ticket_data)
-            session.add(ticket)
-            ticket_ids.append(str(ticket.id))
-
-        await session.commit()
-
-    print(f"Seeded {len(tickets_data)} service tickets")
-    return ticket_ids
-
-
-async def seed_warranty_claims(ticket_ids: list[str]) -> None:
-    """Seed warranty claims for some tickets."""
-    if not ticket_ids:
-        print("No tickets to create warranty claims for")
-        return
-
-    claims_data = [
+def _warranty_claims(ticket: ServiceTicket, now: datetime) -> list[dict[str, Any]]:
+    """Build demo warranty claims covering an in-period and an expired claim."""
+    return [
         {
-            "ticket_id": ticket_ids[0] if len(ticket_ids) > 0 else uuid4(),
-            "product_serial": "ELV-2023-4512",
-            "product_model": "Otis Gen2",
-            "purchase_date": datetime.utcnow() - timedelta(days=500),
-            "failure_date": datetime.utcnow() - timedelta(days=2),
-            "warranty_end_date": datetime.utcnow() + timedelta(days=100),
-            "failure_description": "Main drive belt failed due to manufacturing defect",
+            "ticket_id": ticket.id,
+            "product_serial": "SN-88213-A",
+            "product_model": "TractionPro 400",
+            "purchase_date": now - timedelta(days=200),
+            "failure_date": now - timedelta(days=5),
+            "warranty_end_date": now + timedelta(days=165),
+            "failure_description": "Manufacturing defect in the hoist motor bearing.",
             "status": "pending",
-            "estimated_cost": 1500.00,
+            "estimated_cost": 2400.00,
         },
         {
-            "ticket_id": ticket_ids[1] if len(ticket_ids) > 1 else uuid4(),
-            "product_serial": "ELV-2021-3301",
-            "product_model": "Schindler 3300",
-            "purchase_date": datetime.utcnow() - timedelta(days=1200),
-            "failure_date": datetime.utcnow() - timedelta(days=5),
-            "warranty_end_date": datetime.utcnow() - timedelta(days=100),
-            "failure_description": "Control board failure, possibly water damage",
+            "ticket_id": ticket.id,
+            "product_serial": "SN-41190-C",
+            "product_model": "HydroLift 200",
+            "purchase_date": now - timedelta(days=1500),
+            "failure_date": now - timedelta(days=10),
+            "warranty_end_date": now - timedelta(days=400),
+            "failure_description": "Seal failure after the warranty period expired.",
             "status": "pending",
-            "estimated_cost": 2200.00,
+            "estimated_cost": 1100.00,
         },
     ]
 
-    async with async_session_maker() as session:
-        for claim_data in claims_data:
-            claim = WarrantyClaim(**claim_data)
-            session.add(claim)
 
-        await session.commit()
+async def seed() -> None:
+    """Create tables if needed and insert demo data."""
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
 
-    print(f"Seeded {len(claims_data)} warranty claims")
-
-
-async def seed_parts() -> None:
-    """Seed parts inventory."""
-    parts_data = [
-        {
-            "part_number": "BLT-DR-2000",
-            "name": "Main Drive Belt",
-            "description": "Reinforced drive belt for hydraulic elevators",
-            "category": "Mechanical",
-            "unit_price": 450.00,
-            "quantity_in_stock": 3,
-            "reorder_point": 5,
-            "reorder_quantity": 10,
-            "status": "low_stock",
-            "vendor_name": "ElevatorParts Inc",
-            "vendor_part_number": "EPD-2000",
-            "lead_time_days": 5,
-        },
-        {
-            "part_number": "SNS-DR-450",
-            "name": "Door Sensor Assembly",
-            "description": "Infrared door safety sensor with mounting bracket",
-            "category": "Electrical",
-            "unit_price": 180.00,
-            "quantity_in_stock": 12,
-            "reorder_point": 8,
-            "reorder_quantity": 15,
-            "status": "in_stock",
-            "vendor_name": "SafeSense Systems",
-            "vendor_part_number": "SS-DS-450",
-            "lead_time_days": 3,
-        },
-        {
-            "part_number": "CTL-BRD-800",
-            "name": "Main Control Board",
-            "description": "Programmable logic controller for elevator operation",
-            "category": "Electronics",
-            "unit_price": 1200.00,
-            "quantity_in_stock": 1,
-            "reorder_point": 2,
-            "reorder_quantity": 5,
-            "status": "low_stock",
-            "vendor_name": "ControlTech Solutions",
-            "vendor_part_number": "CTS-MCB-800",
-            "lead_time_days": 10,
-        },
-        {
-            "part_number": "HYD-OIL-55G",
-            "name": "Hydraulic Oil (55 gal)",
-            "description": "Premium synthetic hydraulic oil for elevator systems",
-            "category": "Fluids",
-            "unit_price": 320.00,
-            "quantity_in_stock": 0,
-            "reorder_point": 3,
-            "reorder_quantity": 6,
-            "status": "out_of_stock",
-            "vendor_name": "HydroSupply Co",
-            "vendor_part_number": "HS-HO-55G",
-            "lead_time_days": 2,
-        },
-    ]
+    now = datetime.utcnow()
 
     async with async_session_maker() as session:
-        for part_data in parts_data:
-            part = Part(**part_data)
-            session.add(part)
+        existing = await session.execute(select(Technician.id).limit(1))
+        if existing.first() is not None:
+            print("Demo data already present; skipping seed.")
+            await engine.dispose()
+            return
 
+        session.add_all([Technician(**row) for row in TECHNICIANS])
+        session.add_all([Part(**row) for row in PARTS])
+
+        tickets = [ServiceTicket(**row) for row in _tickets(now)]
+        session.add_all(tickets)
+        await session.flush()
+
+        claims = _warranty_claims(tickets[0], now)
+        session.add_all([WarrantyClaim(**row) for row in claims])
         await session.commit()
 
-    print(f"Seeded {len(parts_data)} parts")
-
-
-async def main() -> None:
-    """Run all seed functions."""
-    print("Starting database seeding...")
-
-    await create_tables()
-    print("Database tables created")
-
-    technician_ids = await seed_technicians()
-    ticket_ids = await seed_tickets(technician_ids)
-    await seed_warranty_claims(ticket_ids)
-    await seed_parts()
-
-    print("\nDatabase seeding completed successfully!")
-    print("\nYou can now:")
-    print("1. Start the backend: make run")
-    print("2. Start the frontend: make run-frontend")
-    print("3. Access the dashboard at http://localhost:5173")
+    print(
+        f"Seeded {len(TECHNICIANS)} technicians, {len(PARTS)} parts, "
+        f"{len(tickets)} service tickets, and {len(claims)} warranty claims."
+    )
+    await engine.dispose()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(seed())

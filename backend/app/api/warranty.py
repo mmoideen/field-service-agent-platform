@@ -1,4 +1,5 @@
 """Warranty claim API endpoints."""
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -17,7 +18,7 @@ router = APIRouter()
 async def create_warranty_claim(
     request: CreateWarrantyClaimRequest,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """Create a new warranty claim and run triage agent."""
     claim = WarrantyClaim(
         ticket_id=request.ticket_id,
@@ -79,7 +80,7 @@ async def create_warranty_claim(
 async def get_warranty_claim(
     claim_id: UUID,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """Get a specific warranty claim by ID."""
     claim = await db.get(WarrantyClaim, claim_id)
     if not claim:
@@ -107,7 +108,7 @@ async def get_warranty_claim(
 async def list_warranty_claims(
     status: str | None = None,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """List all warranty claims with optional status filter."""
     query = select(WarrantyClaim)
     if status:
@@ -138,7 +139,7 @@ async def update_warranty_claim(
     claim_id: UUID,
     request: UpdateWarrantyClaimRequest,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """Update a warranty claim (typically for human override)."""
     claim = await db.get(WarrantyClaim, claim_id)
     if not claim:

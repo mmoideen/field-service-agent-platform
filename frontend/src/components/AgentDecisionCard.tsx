@@ -1,6 +1,6 @@
 import { AgentDecision } from '../types';
 import { formatDistanceToNow } from 'date-fns';
-import { Bot, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Bot, CheckCircle, XCircle } from 'lucide-react';
 
 interface AgentDecisionCardProps {
   decision: AgentDecision;

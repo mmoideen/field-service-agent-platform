@@ -1,6 +1,7 @@
 """Tests for warranty triage agent."""
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 from backend.app.agents.warranty_triage import WarrantyTriageAgent
 

@@ -1,4 +1,5 @@
 """Technician API endpoints."""
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -15,7 +16,7 @@ router = APIRouter()
 async def list_technicians(
     available_only: bool = False,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """List all technicians with optional availability filter."""
     query = select(Technician)
     if available_only:
@@ -46,7 +47,7 @@ async def list_technicians(
 async def get_technician(
     technician_id: UUID,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """Get a specific technician by ID."""
     technician = await db.get(Technician, technician_id)
     if not technician:
@@ -71,7 +72,7 @@ async def update_availability(
     technician_id: UUID,
     is_available: bool,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """Update technician availability status."""
     technician = await db.get(Technician, technician_id)
     if not technician:

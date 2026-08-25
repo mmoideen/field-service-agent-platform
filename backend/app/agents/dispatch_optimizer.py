@@ -2,7 +2,6 @@
 import math
 from datetime import datetime, timedelta
 from typing import Any
-from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession

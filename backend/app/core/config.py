@@ -1,7 +1,10 @@
 """Application configuration."""
-from typing import Any
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+import json
+from typing import Annotated
+
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -19,7 +22,10 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     api_workers: int = 4
-    cors_origins: list[str] = ["http://localhost:5173", "http://localhost:3000"]
+    cors_origins: Annotated[list[str], NoDecode] = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+    ]
 
     # Agent Configuration
     agent_max_retries: int = 3
@@ -40,6 +46,18 @@ class Settings(BaseSettings):
 
     # Environment
     environment: str = "development"
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def _parse_cors_origins(cls, value: object) -> object:
+        """Parse CORS_ORIGINS as a comma-separated list (as in .env.example) or JSON."""
+        if not isinstance(value, str):
+            return value
+
+        stripped = value.strip()
+        if stripped.startswith("["):
+            return json.loads(stripped)
+        return [origin.strip() for origin in stripped.split(",") if origin.strip()]
 
     @property
     def is_development(self) -> bool:

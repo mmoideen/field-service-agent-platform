@@ -23,7 +23,7 @@ This is not a toy demo. The architecture patterns here scale to production:
 2. **Domain-Specific Intelligence**: Agents reason about technician skills, warranty policies, inventory levels, and service priorities using explicit business logic (not black-box LLMs).
 3. **Real-time Operations**: WebSocket connections push agent decisions to operators as they happen.
 4. **Data Integrity**: Full type safety in Python (mypy strict mode) and TypeScript. PostgreSQL for state, Redis for job queues.
-5. **Testability**: 90%+ backend test coverage target with unit tests for all agent reasoning paths.
+5. **Testability**: 90%+ backend test coverage enforced in CI, covering agent reasoning, API endpoints, and persistence.
 
 ### Risk Posture
 
@@ -34,6 +34,13 @@ This is not a toy demo. The architecture patterns here scale to production:
 - **Explainable decisions**: Every agent provides reasoning in plain language with confidence scores.
 - **Incremental rollout**: Start with low-stakes decisions (parts procurement), graduate to high-stakes (dispatch).
 - **Audit compliance**: Full decision history with timestamps, reasoning, and overrides for regulatory requirements.
+
+**Known Gaps Before Production Use:**
+
+- The REST and WebSocket APIs are unauthenticated. Decision override and approval
+  endpoints must be placed behind authentication and role checks before exposure.
+- CORS allows all methods and headers for the configured origins.
+- Default database and Redis credentials in `.env.example` are for local development only.
 
 **Technology Risks Mitigated:**
 
@@ -81,17 +88,27 @@ Access the dashboard at http://localhost:5173
 
 ### Running Tests
 
+Backend integration tests run against PostgreSQL because the models use PostgreSQL
+array columns. They use the database named in `DATABASE_URL` with a `_test` suffix
+(`fieldservice_test` by default), create it before running:
+
 ```bash
-# Backend tests with coverage
+createdb fieldservice_test  # or: docker compose -f infra/docker/docker-compose.yml exec postgres createdb -U fieldservice fieldservice_test
+```
+
+```bash
+# Backend tests with coverage (90% gate)
 make test-coverage
 
-# Linting and type checking
+# Linting and type checking (backend and frontend)
 make lint
 make typecheck
 
-# Frontend tests
-cd frontend && npm test
+# Frontend production build
+make build
 ```
+
+Tests are skipped with a clear message when no PostgreSQL server is reachable.
 
 ## Architecture Overview
 
@@ -291,8 +308,6 @@ See `docs/adr/` for detailed architectural decisions:
 See `docs/runbooks/` for operational procedures:
 
 - [Local Development Setup](docs/runbooks/local-setup.md)
-- [Production Deployment](docs/runbooks/deployment.md)
-- [Incident Response](docs/runbooks/incident-response.md)
 
 ## License
 
@@ -305,7 +320,7 @@ This is a demonstration project showcasing production-ready agentic AI architect
 1. Fork the repository
 2. Create a feature branch
 3. Write tests for your changes
-4. Ensure all quality gates pass (`make all`)
+4. Ensure all quality gates pass (`make lint typecheck test-coverage`)
 5. Submit a pull request
 
 ## Support

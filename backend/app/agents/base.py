@@ -1,8 +1,7 @@
 """Base agent class with governance hooks."""
-import json
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession

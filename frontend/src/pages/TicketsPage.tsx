@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { ServiceTicket } from '../types';
 import { ticketApi } from '../services/api';
@@ -9,18 +9,18 @@ export default function TicketsPage() {
   const [tickets, setTickets] = useState<ServiceTicket[]>([]);
   const [filter, setFilter] = useState<string>('');
 
-  useEffect(() => {
-    loadTickets();
-  }, [filter]);
-
-  const loadTickets = async () => {
+  const loadTickets = useCallback(async () => {
     try {
       const response = await ticketApi.list(filter) as { tickets: ServiceTicket[] };
       setTickets(response.tickets);
     } catch (error) {
       console.error('Failed to load tickets:', error);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    loadTickets();
+  }, [loadTickets]);
 
   const getPriorityBadge = (priority: string) => {
     const styles = {

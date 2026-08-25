@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { WarrantyClaim } from '../types';
 import { warrantyApi } from '../services/api';
@@ -9,18 +9,18 @@ export default function WarrantyPage() {
   const [claims, setClaims] = useState<WarrantyClaim[]>([]);
   const [filter, setFilter] = useState<string>('');
 
-  useEffect(() => {
-    loadClaims();
-  }, [filter]);
-
-  const loadClaims = async () => {
+  const loadClaims = useCallback(async () => {
     try {
       const response = await warrantyApi.list(filter) as { claims: WarrantyClaim[] };
       setClaims(response.claims);
     } catch (error) {
       console.error('Failed to load warranty claims:', error);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    loadClaims();
+  }, [loadClaims]);
 
   const getStatusBadge = (status: string) => {
     const styles = {

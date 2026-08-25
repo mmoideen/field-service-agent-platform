@@ -1,5 +1,4 @@
 """Redis client for caching and job queue."""
-from typing import Any, Optional
 
 import redis.asyncio as aioredis
 
@@ -11,7 +10,7 @@ class RedisClient:
 
     def __init__(self) -> None:
         """Initialize Redis client."""
-        self.redis: Optional[aioredis.Redis] = None
+        self.redis: aioredis.Redis[str] | None = None
 
     async def connect(self) -> None:
         """Connect to Redis server."""
@@ -26,13 +25,13 @@ class RedisClient:
         if self.redis:
             await self.redis.close()
 
-    async def get(self, key: str) -> Optional[str]:
+    async def get(self, key: str) -> str | None:
         """Get value from Redis."""
         if not self.redis:
             raise RuntimeError("Redis client not connected")
         return await self.redis.get(key)
 
-    async def set(self, key: str, value: str, ex: Optional[int] = None) -> None:
+    async def set(self, key: str, value: str, ex: int | None = None) -> None:
         """Set value in Redis with optional expiration."""
         if not self.redis:
             raise RuntimeError("Redis client not connected")
@@ -50,11 +49,11 @@ class RedisClient:
             raise RuntimeError("Redis client not connected")
         await self.redis.lpush(queue_name, job_data)
 
-    async def pop_job(self, queue_name: str, timeout: int = 0) -> Optional[str]:
+    async def pop_job(self, queue_name: str, timeout: int = 0) -> str | None:
         """Pop job from queue with optional blocking."""
         if not self.redis:
             raise RuntimeError("Redis client not connected")
-        result = await self.redis.brpop(queue_name, timeout)
+        result: tuple[str, str] | None = await self.redis.brpop(queue_name, timeout)
         if result:
             return result[1]
         return None
